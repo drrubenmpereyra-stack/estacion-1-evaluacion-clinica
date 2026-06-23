@@ -28,7 +28,7 @@
         <div id="opciones-container"></div>
         <div id="feedback"></div>
         <button id="btn-siguiente" class="btn" style="display:none;">Siguiente Pregunta</button>
-        <button id="btn-cerrar" class="btn" style="display:none; border-color: #d4af37;">Cerrar Estación y Volver al Mapa</button>
+        <!-- Se eliminó el botón de cierre conflictivo -->
     </div>
 </div>
 
@@ -83,12 +83,12 @@
 
     document.getElementById('btn-siguiente').onclick = () => {
         indice++;
-        if (indice < bancoPreguntas.length) cargarPregunta();
-        else {
-            document.getElementById('pregunta-texto').textContent = "Evaluación finalizada.";
+        if (indice < bancoPreguntas.length) {
+            cargarPregunta();
+        } else {
+            document.getElementById('pregunta-texto').textContent = "Evaluación finalizada. Puede cerrar esta pestaña para volver al mapa.";
             document.getElementById('opciones-container').innerHTML = "";
             document.getElementById('btn-siguiente').style.display = "none";
-            document.getElementById('btn-cerrar').style.display = "inline-block";
             finalizar();
         }
     };
@@ -96,11 +96,6 @@
     async function finalizar() {
         await db.collection("progreso").doc(user).set({ estacion_1_finalizada: true }, { merge: true });
     }
-
-    // Ruta corregida al nuevo link del mapa
-    document.getElementById('btn-cerrar').onclick = () => {
-        window.location.href = "https://drrubenmpereyra-stack.github.io/estaciones-evaluacion/";
-    };
 
     cargarPregunta();
 </script>
