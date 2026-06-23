@@ -28,6 +28,7 @@
         <div id="opciones-container"></div>
         <div id="feedback"></div>
         <button id="btn-siguiente" class="btn" style="display:none;">Siguiente Pregunta</button>
+        <!-- Se eliminó el botón de cierre conflictivo -->
     </div>
 </div>
 
@@ -40,4 +41,63 @@
     const bancoPreguntas = [
         { q: "¿Qué micro-expresión facial del paciente contradice su relato?", o: ["Tensión orbicular", "Relajación bucal", "Parpadeo ausente"], c: 0, f: "La disociación entre lo verbal y lo somático es un marcador clínico de defensa." },
         { q: "¿Qué fenómeno contratransferencial se activa ante el silencio?", o: ["Vacío", "Euforia", "Rechazo"], c: 0, f: "El vacío es la respuesta emocional del analista a la desconexión del paciente." },
-        { q: "¿Qué lugar ocupa el fonema /s/ en la estructura del deseo?", o: ["Contención", "Irrupción", "Silencio"], c: 0, f: "La repetición actúa como un escudo ante la angust
+        { q: "¿Qué lugar ocupa el fonema /s/ en la estructura del deseo?", o: ["Contención", "Irrupción", "Silencio"], c: 0, f: "La repetición actúa como un escudo ante la angustia del Ello." },
+        { q: "¿Cuál es el correlato neurobiológico de la aceleración del audio?", o: ["Activación simpática", "Sedación", "Homeostasis"], c: 0, f: "La desregulación autónoma es la vía regia del afecto reprimido." },
+        { q: "¿Cómo definirías la alianza en este corte?", o: ["Fragilizada", "Sólida", "Indiferente"], c: 0, f: "Una alianza sostenida en la resistencia es un pacto defensivo." },
+        { q: "¿Qué indica el cierre en el pecho?", o: ["Clausura Super-yoica", "Distensión", "Apertura"], c: 0, f: "El cuerpo siempre habla lo que el sujeto se niega a significar." },
+        { q: "¿Qué significa la interrupción del flujo a los 2:00?", o: ["Clivaje del sujeto", "Continuidad", "Fatiga"], c: 0, f: "La interrupción marca la irrupción de la pulsión." },
+        { q: "¿Qué transferencia opera en la demanda del paciente?", o: ["Especular", "Simbólica", "Imaginaría"], c: 0, f: "El paciente busca una imagen de completud que le es ajena." },
+        { q: "¿Cuál es la función del silencio del analista?", o: ["Corte simbólico", "Castigo", "Olvido"], c: 0, f: "Permite que el sujeto se escuche en su propia escisión." },
+        { q: "¿Qué rasgo digital resuena con la clínica?", o: ["Fragmentación", "Fluidez", "Nitidez"], c: 0, f: "La forma del medio es homóloga a la estructura del psiquismo." }
+    ];
+
+    let indice = 0;
+    let respondido = false;
+
+    function cargarPregunta() {
+        respondido = false;
+        const p = bancoPreguntas[indice];
+        document.getElementById('pregunta-texto').textContent = p.q;
+        const container = document.getElementById('opciones-container');
+        container.innerHTML = p.o.map((op, i) => `<button class="btn" onclick="validar(${i})">${op}</button>`).join('');
+        document.getElementById('feedback').className = "";
+        document.getElementById('feedback').textContent = "";
+        document.getElementById('btn-siguiente').style.display = "none";
+    }
+
+    function validar(i) {
+        if (respondido) return;
+        respondido = true;
+        const p = bancoPreguntas[indice];
+        const f = document.getElementById('feedback');
+        
+        if (i === p.c) {
+            f.textContent = "¡Correcto! " + p.f;
+            f.className = "correcta";
+        } else {
+            f.textContent = "Incorrecto. " + p.f;
+            f.className = "incorrecta";
+        }
+        document.getElementById('btn-siguiente').style.display = "inline-block";
+    }
+
+    document.getElementById('btn-siguiente').onclick = () => {
+        indice++;
+        if (indice < bancoPreguntas.length) {
+            cargarPregunta();
+        } else {
+            document.getElementById('pregunta-texto').textContent = "Evaluación finalizada. Puede cerrar esta pestaña para volver al mapa.";
+            document.getElementById('opciones-container').innerHTML = "";
+            document.getElementById('btn-siguiente').style.display = "none";
+            finalizar();
+        }
+    };
+
+    async function finalizar() {
+        await db.collection("progreso").doc(user).set({ estacion_1_finalizada: true }, { merge: true });
+    }
+
+    cargarPregunta();
+</script>
+</body>
+</html>
