@@ -2,21 +2,23 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Estación 1</title>
+    <title>Estación 1: Cartografía de la Intersubjetividad</title>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
     <style>
         body { background: #050508; color: #d4af37; font-family: sans-serif; display: flex; justify-content: center; min-height: 100vh; margin: 0; padding: 20px; }
-        #login-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:#000; z-index:9999; display:flex; align-items:center; justify-content:center; }
-        .contenido { max-width: 800px; width: 100%; border: 1px solid #d4af37; padding: 40px; background: #0d1117; }
-        .btn { padding: 10px 20px; border: 1px solid #d4af37; background: transparent; color: #d4af37; cursor: pointer; }
+        #login-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 9999; display: flex; align-items: center; justify-content: center; }
+        .contenido { max-width: 800px; width: 100%; padding: 40px; border: 1px solid #d4af37; border-radius: 15px; background: #0d1117; }
+        .btn { padding: 10px 20px; border: 1px solid #d4af37; color: #d4af37; background: transparent; cursor: pointer; margin: 5px; }
+        .btn:hover { background: #d4af37; color: #000; }
+        #feedback { margin: 15px 0; font-weight: bold; }
     </style>
 </head>
 <body>
 
 <div id="login-overlay">
-    <div style="text-align:center; border:1px solid #d4af37; padding:20px;">
-        <h3>Identificación Estación 1</h3>
+    <div style="text-align:center; border:1px solid #d4af37; padding:20px; background:#050508;">
+        <h3>Identificación Clínica</h3>
         <input type="text" id="nombre-usuario" placeholder="APELLIDO Nombre">
         <button class="btn" onclick="iniciar()">ACEPTAR</button>
     </div>
@@ -38,23 +40,50 @@
     const db = firebase.firestore();
     let user = "";
 
-    function iniciar() {
+    async function iniciar() {
         user = document.getElementById('nombre-usuario').value;
         if (!user) return;
-        document.getElementById('login-overlay').style.display = 'none';
-        document.getElementById('main-content').style.display = 'block';
-        cargarPregunta();
-    }
-
-    // [Aquí inserta tu lógica de bancoPreguntas, cargarPregunta y validar exactamente como la tenías]
-
-    async function finalizar() {
+        
+        // GRABAR EN BASE DE DATOS INMEDIATAMENTE AL INICIAR
         try {
             await db.collection("progreso").doc(user).set({ 
-                completadas: firebase.firestore.FieldValue.arrayUnion(1)
+                inicio_estacion_1: new Date().toISOString() 
             }, { merge: true });
-            window.location.href = "https://drrubenmpereyra-stack.github.io/mapa-global-estaciones/";
-        } catch (e) { alert("Error al guardar"); }
+            
+            document.getElementById('login-overlay').style.display = 'none';
+            document.getElementById('main-content').style.display = 'block';
+            cargarPregunta();
+        } catch (e) {
+            alert("Error al conectar con la base de datos");
+        }
+    }
+
+    const bancoPreguntas = [
+        { q: "¿Qué micro-expresión facial del paciente contradice su relato?", o: ["Tensión orbicular", "Relajación bucal", "Parpadeo ausente"], c: 0 },
+        { q: "¿Qué fenómeno contratransferencial se activa ante el silencio?", o: ["Vacío", "Euforia", "Rechazo"], c: 0 }
+    ];
+
+    let indice = 0;
+    function cargarPregunta() {
+        const p = bancoPreguntas[indice];
+        document.getElementById('pregunta-texto').textContent = p.q;
+        document.getElementById('opciones-container').innerHTML = p.o.map((op, i) => `<button class="btn" onclick="validar(${i})">${op}</button>`).join('');
+    }
+
+    function validar(i) {
+        if(i === bancoPreguntas[indice].c) document.getElementById('feedback').textContent = "Correcto";
+        document.getElementById('btn-siguiente').style.display = "block";
+    }
+
+    document.getElementById('btn-siguiente').onclick = () => {
+        indice++;
+        if (indice < bancoPreguntas.length) cargarPregunta();
+        else finalizar();
+    };
+
+    async function finalizar() {
+        await db.collection("progreso").doc(user).update({ completadas: firebase.firestore.FieldValue.arrayUnion(1) });
+        window.location.href = "https://drrubenmpereyra-stack.github.io/mapa-global-estaciones/";
     }
 </script>
 </body>
