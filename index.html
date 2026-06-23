@@ -38,7 +38,6 @@
     const db = firebase.firestore();
     const user = localStorage.getItem("usuarioActual") || "INVITADO";
 
-    // Nota: El índice 'c' indica cuál es la posición de la respuesta correcta (empezando en 0)
     const bancoPreguntas = [
         { q: "¿Qué micro-expresión facial del paciente contradice su relato?", o: ["Tensión orbicular", "Relajación bucal", "Parpadeo ausente"], c: 0, f: "La disociación entre lo verbal y lo somático es un marcador clínico de defensa." },
         { q: "¿Qué fenómeno contratransferencial se activa ante el silencio?", o: ["Vacío", "Euforia", "Rechazo"], c: 0, f: "El vacío es la respuesta emocional del analista a la desconexión del paciente." },
@@ -98,8 +97,9 @@
         await db.collection("progreso").doc(user).set({ estacion_1_finalizada: true }, { merge: true });
     }
 
+    // Ruta corregida al nuevo link del mapa
     document.getElementById('btn-cerrar').onclick = () => {
-        window.location.href = "https://drrubenmpereyra-stack.github.io/estacion-integracion-sinaptica/index.html";
+        window.location.href = "https://drrubenmpereyra-stack.github.io/estaciones-evaluacion/";
     };
 
     cargarPregunta();
