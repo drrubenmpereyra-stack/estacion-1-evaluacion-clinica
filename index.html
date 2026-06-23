@@ -13,6 +13,8 @@
         .btn:hover { background: #d4af37; color: #000; }
         video, audio { width: 100%; margin: 20px 0; border: 1px solid #d4af37; }
         #feedback { margin: 15px 0; font-weight: bold; }
+        .correcta { color: #4caf50; }
+        .incorrecta { color: #f44336; }
     </style>
 </head>
 <body>
@@ -31,7 +33,7 @@
     <audio controls src="https://github.com/drrubenmpereyra-stack/audio-estacion-1/raw/refs/heads/main/Audio1.mp4"></audio>
 
     <div id="contenedor-evaluacion">
-        <h3 id="pregunta-texto">Cargando...</h3>
+        <h3 id="pregunta-texto"></h3>
         <div id="opciones-container"></div>
         <div id="feedback"></div>
         <button id="btn-siguiente" class="btn" style="display:none;">Siguiente Pregunta</button>
@@ -47,16 +49,23 @@
     let indice = 0;
 
     const bancoPreguntas = [
-        { q: "¿Qué micro-expresión facial del paciente contradice su relato?", o: ["Tensión orbicular", "Relajación bucal", "Parpadeo ausente"], c: 0 },
-        { q: "¿Qué fenómeno contratransferencial se activa ante el silencio?", o: ["Vacío", "Euforia", "Rechazo"], c: 0 },
-        { q: "¿Qué lugar ocupa el fonema /s/ en la estructura del deseo?", o: ["Contención", "Irrupción", "Silencio"], c: 0 }
+        { q: "¿Qué micro-expresión facial del paciente contradice su relato?", o: ["Tensión orbicular", "Relajación bucal", "Parpadeo ausente"], c: 0, f: "La disociación entre lo verbal y lo somático es un marcador clínico de defensa." },
+        { q: "¿Qué fenómeno contratransferencial se activa ante el silencio?", o: ["Vacío", "Euforia", "Rechazo"], c: 0, f: "El vacío es la respuesta emocional del analista a la desconexión del paciente." },
+        { q: "¿Qué lugar ocupa el fonema /s/ en la estructura del deseo?", o: ["Contención", "Irrupción", "Silencio"], c: 0, f: "La repetición actúa como un escudo ante la angustia del Ello." },
+        { q: "¿Cuál es el correlato neurobiológico de la aceleración del audio?", o: ["Activación simpática", "Sedación", "Homeostasis"], c: 0, f: "La desregulación autónoma es la vía regia del afecto reprimido." },
+        { q: "¿Cómo definirías la alianza en este corte?", o: ["Fragilizada", "Sólida", "Indiferente"], c: 0, f: "Una alianza sostenida en la resistencia es un pacto defensivo." },
+        { q: "¿Qué indica el cierre en el pecho?", o: ["Clausura Super-yoica", "Distensión", "Apertura"], c: 0, f: "El cuerpo siempre habla lo que el sujeto se niega a significar." },
+        { q: "¿Qué significa la interrupción del flujo a los 2:00?", o: ["Clivaje del sujeto", "Continuidad", "Fatiga"], c: 0, f: "La interrupción marca la irrupción de la pulsión." },
+        { q: "¿Qué transferencia opera en la demanda del paciente?", o: ["Especular", "Simbólica", "Imaginaría"], c: 0, f: "El paciente busca una imagen de completud que le es ajena." },
+        { q: "¿Cuál es la función del silencio del analista?", o: ["Corte simbólico", "Castigo", "Olvido"], c: 0, f: "Permite que el sujeto se escuche en su propia escisión." },
+        { q: "¿Qué rasgo digital resuena con la clínica?", o: ["Fragmentación", "Fluidez", "Nitidez"], c: 0, f: "La forma del medio es homóloga a la estructura del psiquismo." }
     ];
 
     async function registrarInicio() {
         usuarioActual = document.getElementById('nombre-input').value;
         if (!usuarioActual) return;
         await db.collection("progreso").doc(usuarioActual).set({ nombre: usuarioActual, inicio: new Date().toISOString() }, { merge: true });
-        alert("Ingreso exitoso");
+        alert("Ingreso exitoso para " + usuarioActual);
         document.getElementById('login-overlay').style.display = 'none';
         document.getElementById('actividad').style.display = 'block';
         cargarPregunta();
@@ -66,11 +75,15 @@
         const p = bancoPreguntas[indice];
         document.getElementById('pregunta-texto').textContent = p.q;
         document.getElementById('opciones-container').innerHTML = p.o.map((op, i) => `<button class="btn" onclick="validar(${i})">${op}</button>`).join('');
+        document.getElementById('feedback').textContent = "";
         document.getElementById('btn-siguiente').style.display = "none";
     }
 
     function validar(i) {
-        document.getElementById('feedback').textContent = (i === bancoPreguntas[indice].c) ? "Correcto" : "Incorrecto";
+        const p = bancoPreguntas[indice];
+        const f = document.getElementById('feedback');
+        f.textContent = (i === p.c ? "Correcto: " : "Incorrecto: ") + p.f;
+        f.className = (i === p.c ? "correcta" : "incorrecta");
         document.getElementById('btn-siguiente').style.display = "inline-block";
     }
 
@@ -87,8 +100,10 @@
 
     async function guardarFinal() {
         await db.collection("progreso").doc(usuarioActual).set({ estacion_1_completada: true, fin: new Date().toISOString() }, { merge: true });
-        alert("Datos guardados.");
+        alert("Datos guardados exitosamente.");
     }
+
+    cargarPregunta();
 </script>
 </body>
 </html>
