@@ -89,21 +89,13 @@
 
     document.getElementById('btn-siguiente').onclick = () => {
         indice++;
-        if (indice < bancoPreguntas.length) cargarPregunta();
-        else {
+        if (indice < bancoPreguntas.length) {
+            cargarPregunta();
+        } else {
             document.getElementById('contenedor-evaluacion').innerHTML = `
                 <button class="btn" onclick="guardarFinal()">GUARDAR Y TERMINAR</button>
-                <button class="btn" onclick="window.close()">CERRAR</button>
+                <button class="btn" onclick="cerrarFormulario()">CERRAR</button>
             `;
         }
     };
 
-    async function guardarFinal() {
-        await db.collection("progreso").doc(usuarioActual).set({ estacion_1_completada: true, fin: new Date().toISOString() }, { merge: true });
-        alert("Datos guardados exitosamente.");
-    }
-
-    cargarPregunta();
-</script>
-</body>
-</html>
