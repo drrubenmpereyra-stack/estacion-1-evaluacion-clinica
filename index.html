@@ -6,19 +6,20 @@
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
     <style>
-        body { background: #050508; color: #d4af37; font-family: sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
-        .contenido { max-width: 700px; padding: 40px; border: 1px solid #d4af37; border-radius: 15px; background: #0d1117; text-align: center; }
-        .btn { padding: 15px 30px; border: 1px solid #d4af37; color: #d4af37; background: transparent; cursor: pointer; margin: 20px; font-size: 16px; }
+        body { background: #050508; color: #d4af37; font-family: 'Segoe UI', sans-serif; display: flex; justify-content: center; min-height: 100vh; margin: 0; padding: 20px; }
+        .contenido { max-width: 800px; width: 100%; padding: 40px; border: 1px solid #d4af37; border-radius: 15px; background: #0d1117; }
+        .btn { padding: 15px 30px; border: 1px solid #d4af37; color: #d4af37; background: transparent; cursor: pointer; margin: 10px; font-weight: bold; }
         .btn:hover { background: #d4af37; color: #000; }
-        video, audio { width: 100%; margin-top: 20px; border: 1px solid #d4af37; }
-        .opciones { text-align: left; margin: 20px 0; }
+        video, audio { width: 100%; margin: 20px 0; border: 1px solid #d4af37; }
+        #contenedor-evaluacion { margin-top: 30px; padding: 20px; border-top: 1px solid #d4af37; }
+        .feedback { display: none; margin-top: 10px; font-style: italic; color: #aaa; }
     </style>
 </head>
 <body>
 
 <div class="contenido">
-    <h1>Cartografía de la Intersubjetividad</h1>
-    <p>Alianza terapéutica y eje HPA.</p>
+    <h1 id="titulo">Cartografía de la Intersubjetividad</h1>
+    <p id="descripcion">Alianza terapéutica y eje HPA.</p>
     
     <video controls autoplay loop muted playsinline 
            src="https://github.com/drrubenmpereyra-stack/video-trazado-estacion-1/raw/refs/heads/main/video_traazado.mp4">
@@ -28,14 +29,12 @@
            src="https://github.com/drrubenmpereyra-stack/audio-estacion-1/raw/refs/heads/main/Audio1.mp4">
     </audio>
 
-    <div class="opciones">
-        <h3>¿Qué proceso biológico refleja la sensación de cierre en el pecho?</h3>
-        <input type="radio" name="neuro" id="op1" value="0"> <label for="op1">Falla en memoria</label><br>
-        <input type="radio" name="neuro" id="op2" value="1"> <label for="op2">Activación eje HPA</label><br>
-        <input type="radio" name="neuro" id="op3" value="2"> <label for="op3">Disminución FC</label>
+    <div id="contenedor-evaluacion">
+        <h3>Evaluación Clínica: Interpretación</h3>
+        <div id="area-pregunta"></div>
+        <button id="btn-siguiente" class="btn">Siguiente Pregunta</button>
     </div>
 
-    <button id="btn-finalizar" class="btn">Finalizar Estación y Validar</button>
     <br><a href="estacion_integracion_sinaptica.html" style="color: #d4af37;">⬅ Volver al Mapa</a>
 </div>
 
@@ -46,27 +45,43 @@
     const db = firebase.firestore();
     const user = localStorage.getItem("usuarioActual") || "INVITADO";
 
-    document.getElementById('btn-finalizar').addEventListener('click', async () => {
-        const seleccion = document.querySelector('input[name="neuro"]:checked');
-        if (!seleccion) {
-            alert("Por favor, selecciona una respuesta antes de finalizar.");
+    const preguntas = [
+        { q: "¿Qué micro-expresión facial del paciente contradice su relato verbal?", o: ["Tensión orbicular", "Relajación bucal", "Parpadeo ausente"], f: "La disociación somática es un marcador clínico de defensa." },
+        { q: "¿Qué fenómeno contratransferencial se activa en el minuto 1:12?", o: ["Vacío ante el silencio", "Euforia", "Rechazo activo"], f: "Ese vacío es la respuesta emocional del analista a la desconexión del paciente." }
+        // ... aquí puedes añadir hasta las 10 preguntas siguiendo este formato
+    ];
+
+    let indice = 0;
+    const area = document.getElementById('area-pregunta');
+
+    function renderizar() {
+        if(indice >= preguntas.length) {
+            guardarProgreso();
             return;
         }
+        const p = preguntas[indice];
+        area.innerHTML = `
+            <p>${p.q}</p>
+            ${p.o.map((op, i) => `<button class="btn" onclick="validar(${i})">${op}</button>`).join('')}
+            <p class="feedback" id="fdb"></p>
+        `;
+    }
 
-        try {
-            await db.collection("progreso").doc(user).set({ 
-                estacion_1: true,
-                respuesta_estacion_1: seleccion.value,
-                fecha: new Date().toISOString()
-            }, { merge: true });
-            
-            alert("¡Estación completada!");
-            window.location.href = "estacion_integracion_sinaptica.html";
-        } catch (e) {
-            console.error(e);
-            alert("Error al guardar en base de datos.");
-        }
-    });
+    function validar(i) {
+        const f = document.getElementById('fdb');
+        f.style.display = 'block';
+        f.textContent = "Feedback: " + preguntas[indice].f;
+    }
+
+    document.getElementById('btn-siguiente').onclick = () => { indice++; renderizar(); };
+
+    async function guardarProgreso() {
+        await db.collection("progreso").doc(user).set({ estacion_1_finalizada: true, fecha: new Date().toISOString() }, { merge: true });
+        alert("¡Estación finalizada!");
+        window.location.href = "estacion_integracion_sinaptica.html";
+    }
+
+    renderizar();
 </script>
 
 </body>
