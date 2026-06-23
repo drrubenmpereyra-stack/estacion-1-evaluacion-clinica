@@ -6,83 +6,76 @@
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
     <style>
-        body { background: #050508; color: #d4af37; font-family: 'Segoe UI', sans-serif; display: flex; justify-content: center; min-height: 100vh; margin: 0; padding: 20px; }
+        body { background: #050508; color: #d4af37; font-family: sans-serif; display: flex; justify-content: center; min-height: 100vh; margin: 0; padding: 20px; }
         .contenido { max-width: 800px; width: 100%; padding: 40px; border: 1px solid #d4af37; border-radius: 15px; background: #0d1117; }
-        .btn { padding: 15px 30px; border: 1px solid #d4af37; color: #d4af37; background: transparent; cursor: pointer; margin: 10px; font-weight: bold; }
+        .btn { padding: 10px 20px; border: 1px solid #d4af37; color: #d4af37; background: transparent; cursor: pointer; margin: 5px; }
         .btn:hover { background: #d4af37; color: #000; }
         video, audio { width: 100%; margin: 20px 0; border: 1px solid #d4af37; }
-        #contenedor-evaluacion { margin-top: 30px; padding: 20px; border-top: 1px solid #d4af37; }
-        .feedback { display: none; margin-top: 10px; font-style: italic; color: #aaa; }
+        #feedback { margin: 15px 0; font-style: italic; color: #aaa; min-height: 50px; }
     </style>
 </head>
 <body>
 
 <div class="contenido">
-    <h1 id="titulo">Cartografía de la Intersubjetividad</h1>
-    <p id="descripcion">Alianza terapéutica y eje HPA.</p>
-    
-    <video controls autoplay loop muted playsinline 
-           src="https://github.com/drrubenmpereyra-stack/video-trazado-estacion-1/raw/refs/heads/main/video_traazado.mp4">
-    </video>
-    
-    <audio controls 
-           src="https://github.com/drrubenmpereyra-stack/audio-estacion-1/raw/refs/heads/main/Audio1.mp4">
-    </audio>
+    <h1>Cartografía de la Intersubjetividad</h1>
+    <video controls src="https://github.com/drrubenmpereyra-stack/video-trazado-estacion-1/raw/refs/heads/main/video_traazado.mp4"></video>
+    <audio controls src="https://github.com/drrubenmpereyra-stack/audio-estacion-1/raw/refs/heads/main/Audio1.mp4"></audio>
 
     <div id="contenedor-evaluacion">
-        <h3>Evaluación Clínica: Interpretación</h3>
-        <div id="area-pregunta"></div>
-        <button id="btn-siguiente" class="btn">Siguiente Pregunta</button>
+        <h3 id="pregunta-texto">Cargando...</h3>
+        <div id="opciones-container"></div>
+        <div id="feedback"></div>
+        <button id="btn-siguiente" class="btn" style="display:none;">Siguiente Pregunta</button>
     </div>
-
-    <br><a href="estacion_integracion_sinaptica.html" style="color: #d4af37;">⬅ Volver al Mapa</a>
 </div>
 
 <script>
-    // Configuración Firebase
     const firebaseConfig = { apiKey: "AIzaSyD47_2UtWLFI_VRVvvXVAqn4zZzZ4d1ggo", projectId: "av-clinica-convergencia", authDomain: "av-clinica-convergencia.firebaseapp.com", databaseURL: "https://av-clinica-convergencia-default-rtdb.firebaseio.com", storageBucket: "av-clinica-convergencia.firebasestorage.app", messagingSenderId: "939404425675", appId: "1:939404425675:web:8cfae157099efabd741e4e" };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
     const user = localStorage.getItem("usuarioActual") || "INVITADO";
 
-    const preguntas = [
-        { q: "¿Qué micro-expresión facial del paciente contradice su relato verbal?", o: ["Tensión orbicular", "Relajación bucal", "Parpadeo ausente"], f: "La disociación somática es un marcador clínico de defensa." },
-        { q: "¿Qué fenómeno contratransferencial se activa en el minuto 1:12?", o: ["Vacío ante el silencio", "Euforia", "Rechazo activo"], f: "Ese vacío es la respuesta emocional del analista a la desconexión del paciente." }
-        // ... aquí puedes añadir hasta las 10 preguntas siguiendo este formato
+    const bancoPreguntas = [
+        { q: "¿Qué micro-expresión facial del paciente contradice su relato?", o: ["Tensión orbicular", "Relajación bucal", "Parpadeo ausente"], f: "La disociación entre lo verbal y lo somático es un marcador clínico de defensa." },
+        { q: "¿Qué fenómeno contratransferencial se activa ante el silencio?", o: ["Vacío", "Euforia", "Rechazo"], f: "El vacío es la respuesta emocional del analista a la desconexión del paciente." },
+        { q: "¿Qué lugar ocupa el fonema /s/ en la estructura del deseo?", o: ["Contención", "Irrupción", "Silencio"], f: "La repetición actúa como un escudo ante la angustia del Ello." },
+        { q: "¿Cuál es el correlato neurobiológico de la aceleración del audio?", o: ["Activación simpática", "Sedación", "Homeostasis"], f: "La desregulación autónoma es la vía regia del afecto reprimido." },
+        { q: "¿Cómo definirías la alianza en este corte?", o: ["Fragilizada", "Sólida", "Indiferente"], f: "Una alianza sostenida en la resistencia es un pacto defensivo." },
+        { q: "¿Qué indica el cierre en el pecho?", o: ["Clausura Super-yoica", "Distensión", "Apertura"], f: "El cuerpo siempre habla lo que el sujeto se niega a significar." },
+        { q: "¿Qué significa la interrupción del flujo a los 2:00?", o: ["Clivaje del sujeto", "Continuidad", "Fatiga"], f: "La interrupción marca la irrupción de la pulsión." },
+        { q: "¿Qué transferencia opera en la demanda del paciente?", o: ["Especular", "Simbólica", "Imaginaría"], f: "El paciente busca una imagen de completud que le es ajena." },
+        { q: "¿Cuál es la función del silencio del analista?", o: ["Corte simbólico", "Castigo", "Olvido"], f: "Permite que el sujeto se escuche en su propia escisión." },
+        { q: "¿Qué rasgo digital resuena con la clínica?", o: ["Fragmentación", "Fluidez", "Nitidez"], f: "La forma del medio es homóloga a la estructura del psiquismo." }
     ];
 
     let indice = 0;
-    const area = document.getElementById('area-pregunta');
-
-    function renderizar() {
-        if(indice >= preguntas.length) {
-            guardarProgreso();
-            return;
-        }
-        const p = preguntas[indice];
-        area.innerHTML = `
-            <p>${p.q}</p>
-            ${p.o.map((op, i) => `<button class="btn" onclick="validar(${i})">${op}</button>`).join('')}
-            <p class="feedback" id="fdb"></p>
-        `;
+    function cargarPregunta() {
+        const p = bancoPreguntas[indice];
+        document.getElementById('pregunta-texto').textContent = p.q;
+        const container = document.getElementById('opciones-container');
+        container.innerHTML = p.o.map((op, i) => `<button class="btn" onclick="validar(${i})">${op}</button>`).join('');
+        document.getElementById('feedback').textContent = "";
+        document.getElementById('btn-siguiente').style.display = "none";
     }
 
     function validar(i) {
-        const f = document.getElementById('fdb');
-        f.style.display = 'block';
-        f.textContent = "Feedback: " + preguntas[indice].f;
+        document.getElementById('feedback').textContent = "Feedback: " + bancoPreguntas[indice].f;
+        document.getElementById('btn-siguiente').style.display = "inline-block";
     }
 
-    document.getElementById('btn-siguiente').onclick = () => { indice++; renderizar(); };
+    document.getElementById('btn-siguiente').onclick = () => {
+        indice++;
+        if (indice < bancoPreguntas.length) cargarPregunta();
+        else finalizar();
+    };
 
-    async function guardarProgreso() {
-        await db.collection("progreso").doc(user).set({ estacion_1_finalizada: true, fecha: new Date().toISOString() }, { merge: true });
-        alert("¡Estación finalizada!");
+    async function finalizar() {
+        await db.collection("progreso").doc(user).set({ estacion_1_finalizada: true }, { merge: true });
+        alert("Estación finalizada.");
         window.location.href = "estacion_integracion_sinaptica.html";
     }
 
-    renderizar();
+    cargarPregunta();
 </script>
-
 </body>
 </html>
