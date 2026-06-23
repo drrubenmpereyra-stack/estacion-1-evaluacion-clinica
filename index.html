@@ -2,14 +2,17 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Estación 1</title>
+    <title>Estación 1: Cartografía de la Intersubjetividad</title>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
     <style>
         body { background: #050508; color: #d4af37; font-family: sans-serif; padding: 20px; }
         #login-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:#000; z-index:9999; display:flex; align-items:center; justify-content:center; }
-        .contenido { display:none; max-width: 800px; margin: auto; }
-        .btn { padding: 10px 20px; border: 1px solid #d4af37; color: #d4af37; background: transparent; cursor: pointer; }
+        .contenido { display:none; max-width: 800px; margin: auto; border: 1px solid #d4af37; padding: 40px; background: #0d1117; }
+        .btn { padding: 10px 20px; border: 1px solid #d4af37; color: #d4af37; background: transparent; cursor: pointer; margin: 5px; }
+        .btn:hover { background: #d4af37; color: #000; }
+        video, audio { width: 100%; margin: 20px 0; border: 1px solid #d4af37; }
+        #feedback { margin: 15px 0; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -24,9 +27,14 @@
 
 <div class="contenido" id="actividad">
     <h1>Cartografía de la Intersubjetividad</h1>
-    <div style="margin-top: 50px;">
-        <button class="btn" onclick="guardarFinal()">GUARDAR Y TERMINAR</button>
-        <button class="btn" onclick="window.close()">CERRAR</button>
+    <video controls src="https://github.com/drrubenmpereyra-stack/video-trazado-estacion-1/raw/refs/heads/main/video_traazado.mp4"></video>
+    <audio controls src="https://github.com/drrubenmpereyra-stack/audio-estacion-1/raw/refs/heads/main/Audio1.mp4"></audio>
+
+    <div id="contenedor-evaluacion">
+        <h3 id="pregunta-texto">Cargando...</h3>
+        <div id="opciones-container"></div>
+        <div id="feedback"></div>
+        <button id="btn-siguiente" class="btn" style="display:none;">Siguiente Pregunta</button>
     </div>
 </div>
 
@@ -36,28 +44,50 @@
     const db = firebase.firestore();
     
     let usuarioActual = "";
+    let indice = 0;
+
+    const bancoPreguntas = [
+        { q: "¿Qué micro-expresión facial del paciente contradice su relato?", o: ["Tensión orbicular", "Relajación bucal", "Parpadeo ausente"], c: 0 },
+        { q: "¿Qué fenómeno contratransferencial se activa ante el silencio?", o: ["Vacío", "Euforia", "Rechazo"], c: 0 },
+        { q: "¿Qué lugar ocupa el fonema /s/ en la estructura del deseo?", o: ["Contención", "Irrupción", "Silencio"], c: 0 }
+    ];
 
     async function registrarInicio() {
         usuarioActual = document.getElementById('nombre-input').value;
         if (!usuarioActual) return;
-
-        await db.collection("progreso").doc(usuarioActual).set({ 
-            nombre: usuarioActual,
-            inicio: new Date().toISOString()
-        }, { merge: true });
-
-        alert("Ingreso exitoso para " + usuarioActual);
+        await db.collection("progreso").doc(usuarioActual).set({ nombre: usuarioActual, inicio: new Date().toISOString() }, { merge: true });
+        alert("Ingreso exitoso");
         document.getElementById('login-overlay').style.display = 'none';
         document.getElementById('actividad').style.display = 'block';
+        cargarPregunta();
     }
 
-    async function guardarFinal() {
-        await db.collection("progreso").doc(usuarioActual).set({ 
-            estacion_1_completada: true,
-            fin: new Date().toISOString()
-        }, { merge: true });
+    function cargarPregunta() {
+        const p = bancoPreguntas[indice];
+        document.getElementById('pregunta-texto').textContent = p.q;
+        document.getElementById('opciones-container').innerHTML = p.o.map((op, i) => `<button class="btn" onclick="validar(${i})">${op}</button>`).join('');
+        document.getElementById('btn-siguiente').style.display = "none";
+    }
 
-        alert("Datos guardados exitosamente.");
+    function validar(i) {
+        document.getElementById('feedback').textContent = (i === bancoPreguntas[indice].c) ? "Correcto" : "Incorrecto";
+        document.getElementById('btn-siguiente').style.display = "inline-block";
+    }
+
+    document.getElementById('btn-siguiente').onclick = () => {
+        indice++;
+        if (indice < bancoPreguntas.length) cargarPregunta();
+        else {
+            document.getElementById('contenedor-evaluacion').innerHTML = `
+                <button class="btn" onclick="guardarFinal()">GUARDAR Y TERMINAR</button>
+                <button class="btn" onclick="window.close()">CERRAR</button>
+            `;
+        }
+    };
+
+    async function guardarFinal() {
+        await db.collection("progreso").doc(usuarioActual).set({ estacion_1_completada: true, fin: new Date().toISOString() }, { merge: true });
+        alert("Datos guardados.");
     }
 </script>
 </body>
